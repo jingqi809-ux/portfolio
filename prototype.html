@@ -1,0 +1,296 @@
+
+<style>
+  .wrap { font-family: var(--font-sans); padding: 1rem 0; }
+  .nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .tab { padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 13px; cursor: pointer; background: var(--surface-1); color: var(--text-secondary); transition: all 0.15s; }
+  .tab.active { background: var(--bg-accent); color: var(--text-accent); border-color: var(--border-accent); font-weight: 500; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .frame { border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface-2); overflow: hidden; }
+  .topbar { background: var(--surface-1); border-bottom: 0.5px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-secondary); }
+  .badge { background: var(--bg-accent); color: var(--text-accent); font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .body { display: flex; min-height: 380px; }
+  .sidebar { width: 140px; border-right: 0.5px solid var(--border); background: var(--surface-1); padding: 12px 0; flex-shrink: 0; }
+  .menu-item { padding: 8px 16px; font-size: 12px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .menu-item.active { color: var(--text-accent); background: var(--bg-accent); font-weight: 500; }
+  .menu-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .page-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px; }
+  .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .stat-card { flex: 1; min-width: 100px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 500; color: var(--text-primary); }
+  .stat-sub { font-size: 11px; color: var(--text-success); margin-top: 2px; }
+  .table-wrap { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--surface-1); padding: 8px 10px; text-align: left; color: var(--text-muted); font-weight: 400; border-bottom: 0.5px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 0.5px solid var(--border); color: var(--text-primary); }
+  tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .pill-pending { background: var(--bg-warning); color: var(--text-warning); }
+  .pill-confirmed { background: var(--bg-accent); color: var(--text-accent); }
+  .pill-shipped { background: var(--bg-success); color: var(--text-success); }
+  .pill-canceled { background: var(--bg-danger); color: var(--text-danger); }
+  .btn { font-size: 12px; padding: 5px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); cursor: pointer; }
+  .btn-primary { background: var(--fill-accent); color: var(--on-accent); border-color: var(--fill-accent); }
+  .search-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .search-input { flex: 1; height: 30px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface-1); padding: 0 10px; font-size: 12px; color: var(--text-primary); }
+  .filter-btn { font-size: 12px; padding: 0 10px; height: 30px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
+  .card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; }
+  .label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .val { font-size: 13px; color: var(--text-primary); }
+  .divider { height: 0.5px; background: var(--border); margin: 10px 0; }
+  .item-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .item-row:last-child { border-bottom: none; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--surface-1); color: var(--text-secondary); border: 0.5px solid var(--border); }
+  .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .prod-card { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px; }
+  .prod-img { height: 50px; background: var(--surface-0); border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; }
+  .prod-name { font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+  .prod-price { font-size: 12px; color: var(--text-accent); margin-bottom: 6px; }
+  .prod-stock { font-size: 11px; color: var(--text-muted); }
+  .note { font-size: 11px; color: var(--text-muted); margin-top: 12px; padding: 8px 10px; background: var(--surface-1); border-radius: var(--radius); border-left: 2px solid var(--border-accent); }
+</style>
+
+<div class="wrap">
+  <h2 class="sr-only">联豪ToB线上订购平台线框图，包含6个主要页面</h2>
+  <div class="nav" id="nav"></div>
+  <div id="screens"></div>
+</div>
+
+<script>
+const pages = [
+  {
+    id: "login",
+    label: "登录页",
+    menu: null,
+    render() {
+      return `
+        <div class="frame" style="max-width:360px;margin:0 auto;">
+          <div style="padding:32px 28px;">
+            <div style="font-size:18px;font-weight:500;color:var(--text-primary);margin-bottom:4px;">联豪订购平台</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:24px;">B端客户专属采购系统</div>
+            <div class="label">账户名称 / 统一信用代码</div>
+            <div style="height:32px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);margin-bottom:10px;"></div>
+            <div class="label">登录密码</div>
+            <div style="height:32px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);margin-bottom:16px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+              <button class="btn btn-primary" style="flex:1;height:34px;">登录</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);text-align:center;">忘记密码？联系联豪销售顾问</div>
+          </div>
+        </div>
+        
+      `;
+    }
+  },
+  {
+    id: "dashboard",
+    label: "工作台（首页）",
+    menu: ["工作台", "商品目录", "下单", "我的订单", "对账中心", "账户设置"],
+    activeMenu: 0,
+    render() {
+      return `
+        <div class="page-title">工作台</div>
+        <div class="row">
+          <div class="stat-card"><div class="stat-label">本月采购额（元）</div><div class="stat-val">128,400</div><div class="stat-sub">↑ 12% vs 上月</div></div>
+          <div class="stat-card"><div class="stat-label">待确认订单</div><div class="stat-val">3</div></div>
+          <div class="stat-card"><div class="stat-label">待收货</div><div class="stat-val">7</div></div>
+          <div class="stat-card"><div class="stat-label">本月订单笔数</div><div class="stat-val">21</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:500;color:var(--text-primary);margin-bottom:8px;">近期订单</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>订单号</th><th>下单时间</th><th>金额</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>LH-20260601-081</td><td>2026-06-01</td><td>¥12,600</td><td><span class="pill pill-shipped">已发货</span></td></tr>
+              <tr><td>LH-20260528-079</td><td>2026-05-28</td><td>¥8,400</td><td><span class="pill pill-confirmed">已确认</span></td></tr>
+              <tr><td>LH-20260525-077</td><td>2026-05-25</td><td>¥5,200</td><td><span class="pill pill-pending">待确认</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+      `;
+    }
+  },
+  {
+    id: "catalog",
+    label: "商品目录",
+    menu: ["工作台", "商品目录", "下单", "我的订单", "对账中心", "账户设置"],
+    activeMenu: 1,
+    render() {
+      return `
+        <div class="page-title">商品目录</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+          <span class="tag" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);">全部</span>
+          <span class="tag">鲜牛肉</span><span class="tag">冷冻牛肉</span><span class="tag">预制品</span><span class="tag">牛杂</span>
+        </div>
+        <div class="search-bar"><input class="search-input" placeholder="搜索商品名 / 货号" /><button class="filter-btn">筛选</button></div>
+        <div class="prod-grid">
+          ${[
+            {name:"原切牛腱子 5kg/箱",price:"¥680/箱",stock:"库存充足",color:"#e8f4e8"},
+            {name:"牛上脑 3kg/箱",price:"¥520/箱",stock:"库存充足",color:"#e8f0f8"},
+            {name:"牛腩 5kg/箱",price:"¥460/箱",stock:"库存充足",color:"#fdf0e0"},
+            {name:"预制高炸牛排 1kg/袋",price:"¥98/袋",stock:"起订10袋",color:"#f0e8f4"},
+            {name:"牛百叶 2kg/袋",price:"¥120/袋",stock:"需提前预订",color:"#fde8e8"},
+            {name:"牛骨汤底 1kg/包",price:"¥45/包",stock:"库存充足",color:"#e8f4f0"},
+          ].map(p=>`
+            <div class="prod-card">
+              <div class="prod-img" style="background:${p.color};">
+                <i class="ti ti-package" style="font-size:20px;color:var(--text-muted);" aria-hidden="true"></i>
+              </div>
+              <div class="prod-name">${p.name}</div>
+              <div class="prod-price">${p.price}</div>
+              <div class="prod-stock">${p.stock}</div>
+              <button class="btn" style="width:100%;margin-top:8px;font-size:11px;">加入采购单</button>
+            </div>
+          `).join("")}
+        </div>
+        
+      `;
+    }
+  },
+  {
+    id: "order",
+    label: "下单确认",
+    menu: ["工作台", "商品目录", "下单", "我的订单", "对账中心", "账户设置"],
+    activeMenu: 2,
+    render() {
+      return `
+        <div class="page-title">确认采购单</div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="label">收货信息</div>
+          <div class="val">上海市静安区某餐饮有限公司  · 收货人：张经理  18800001234</div>
+          <div class="val" style="color:var(--text-muted);font-size:11px;margin-top:2px;">静安区常德路 xxx号</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="label" style="margin-bottom:8px;">采购明细</div>
+          <div class="item-row"><span>原切牛腱子 5kg/箱 × 4</span><span style="color:var(--text-primary);font-weight:500;">¥2,720</span></div>
+          <div class="item-row"><span>预制高炸牛排 1kg/袋 × 20</span><span style="color:var(--text-primary);font-weight:500;">¥1,960</span></div>
+          <div class="item-row"><span>牛腩 5kg/箱 × 3</span><span style="color:var(--text-primary);font-weight:500;">¥1,380</span></div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;">
+            <span>合计</span><span style="color:var(--text-accent);">¥6,060</span>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="label">期望送达日期</div>
+          <div style="height:30px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);margin-top:4px;display:flex;align-items:center;padding:0 10px;font-size:12px;color:var(--text-muted);">2026-06-05</div>
+          <div class="label" style="margin-top:10px;">备注（可选）</div>
+          <div style="height:44px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);margin-top:4px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="flex:1;height:36px;">保存草稿</button>
+          <button class="btn btn-primary" style="flex:2;height:36px;">提交订单</button>
+        </div>
+        
+      `;
+    }
+  },
+  {
+    id: "orders",
+    label: "我的订单",
+    menu: ["工作台", "商品目录", "下单", "我的订单", "对账中心", "账户设置"],
+    activeMenu: 3,
+    render() {
+      return `
+        <div class="page-title">我的订单</div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索订单号 / 商品名" />
+          <button class="filter-btn">全部状态 ▾</button>
+          <button class="filter-btn">时间 ▾</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>订单号</th><th>下单时间</th><th>商品</th><th>金额</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>LH-20260601-081</td><td>06-01</td><td>牛腱子等 3项</td><td>¥12,600</td><td><span class="pill pill-shipped">已发货</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">查看物流</button></td></tr>
+              <tr><td>LH-20260528-079</td><td>05-28</td><td>高炸牛排等 2项</td><td>¥8,400</td><td><span class="pill pill-confirmed">已确认</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">查看详情</button></td></tr>
+              <tr><td>LH-20260525-077</td><td>05-25</td><td>牛腩 1项</td><td>¥5,200</td><td><span class="pill pill-pending">待确认</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">撤销</button></td></tr>
+              <tr><td>LH-20260510-068</td><td>05-10</td><td>牛百叶等 4项</td><td>¥3,100</td><td><span class="pill pill-canceled">已取消</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">再次下单</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+      `;
+    }
+  },
+  {
+    id: "billing",
+    label: "对账中心",
+    menu: ["工作台", "商品目录", "下单", "我的订单", "对账中心", "账户设置"],
+    activeMenu: 4,
+    render() {
+      return `
+        <div class="page-title">对账中心</div>
+        <div class="row">
+          <div class="stat-card"><div class="stat-label">本月已采购（元）</div><div class="stat-val">128,400</div></div>
+          <div class="stat-card"><div class="stat-label">待结算（元）</div><div class="stat-val">36,200</div></div>
+          <div class="stat-card"><div class="stat-label">账期剩余天数</div><div class="stat-val" style="color:var(--text-warning);">8</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:500;color:var(--text-primary);">账单明细</div>
+          <button class="btn" style="font-size:11px;padding:4px 10px;"><i class="ti ti-download" style="font-size:13px;vertical-align:-2px;" aria-hidden="true"></i> 导出Excel</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>对账周期</th><th>订单数</th><th>采购金额</th><th>已结算</th><th>待结算</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>2026-05</td><td>21</td><td>¥128,400</td><td>¥92,200</td><td>¥36,200</td><td><span class="pill pill-pending">对账中</span></td></tr>
+              <tr><td>2026-04</td><td>18</td><td>¥114,600</td><td>¥114,600</td><td>—</td><td><span class="pill pill-confirmed">已结清</span></td></tr>
+              <tr><td>2026-03</td><td>22</td><td>¥136,000</td><td>¥136,000</td><td>—</td><td><span class="pill pill-confirmed">已结清</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+      `;
+    }
+  }
+];
+
+const nav = document.getElementById("nav");
+const screens = document.getElementById("screens");
+
+pages.forEach((page, i) => {
+  const btn = document.createElement("button");
+  btn.className = "tab" + (i === 0 ? " active" : "");
+  btn.textContent = page.label;
+  btn.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("screen-" + page.id).classList.add("active");
+  };
+  nav.appendChild(btn);
+
+  const div = document.createElement("div");
+  div.id = "screen-" + page.id;
+  div.className = "screen" + (i === 0 ? " active" : "");
+
+  if (page.menu) {
+    div.innerHTML = `
+      <div class="frame">
+        <div class="topbar">
+          <div class="logo">联豪订购平台</div>
+          <div class="topbar-right">
+            <span>上海某餐饮有限公司</span>
+            <span class="badge">B端客户</span>
+            <i class="ti ti-bell" style="font-size:16px;" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="body">
+          <div class="sidebar">
+            ${page.menu.map((m, j) => `<div class="menu-item${j === page.activeMenu ? " active" : ""}"><span class="menu-dot"></span>${m}</div>`).join("")}
+          </div>
+          <div class="content">${page.render()}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    div.innerHTML = `<div>${page.render()}</div>`;
+  }
+  screens.appendChild(div);
+});
+</script>
