@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电商用户行为分析报告 · 钱婧琦</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0d0f12;
+    --surface: #141820;
+    --surface2: #1c2230;
+    --border: #252d3d;
+    --text: #e8edf5;
+    --text2: #8a9bb8;
+    --text3: #4a5568;
+    --accent: #4f8ef7;
+    --accent2: #7eb3ff;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Noto Sans SC', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; line-height: 1.7; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,15,18,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 52px;
+  }
+  .nav-logo { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { font-size: 12px; color: var(--text2); text-decoration: none; letter-spacing: .06em; transition: color .15s; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 100px 40px 80px; max-width: 900px; margin: 0 auto;
+    position: relative;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    letter-spacing: .15em; text-transform: uppercase; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+  .hero-title {
+    font-size: clamp(36px, 6vw, 72px); font-weight: 700; line-height: 1.1;
+    letter-spacing: -.02em; margin-bottom: 24px;
+  }
+  .hero-title em { font-style: normal; color: var(--accent); }
+  .hero-sub { font-size: 16px; color: var(--text2); max-width: 560px; line-height: 1.8; margin-bottom: 48px; }
+  .hero-meta { display: flex; gap: 32px; flex-wrap: wrap; }
+  .meta-item { }
+  .meta-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+  .meta-val { font-size: 14px; color: var(--text2); }
+
+  /* GRID LINE BG */
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: .3; pointer-events: none;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+  }
+
+  /* SECTIONS */
+  section { padding: 80px 40px; max-width: 900px; margin: 0 auto; }
+  .section-label {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    letter-spacing: .15em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .section-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .section-sub { font-size: 14px; color: var(--text2); margin-bottom: 40px; line-height: 1.7; }
+
+  /* STAT CARDS */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--accent));
+  }
+  .stat-num { font-family: var(--mono); font-size: 36px; font-weight: 500; color: var(--text); line-height: 1; margin-bottom: 6px; }
+  .stat-num span { font-size: 16px; color: var(--text2); }
+  .stat-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 28px; margin-bottom: 24px;
+  }
+  .chart-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: var(--text2); margin-bottom: 24px; }
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* FUNNEL */
+  .funnel { display: flex; flex-direction: column; gap: 8px; margin: 24px 0; }
+  .funnel-row { display: flex; align-items: center; gap: 16px; }
+  .funnel-bar-wrap { flex: 1; height: 44px; background: var(--surface2); border-radius: 6px; overflow: hidden; position: relative; }
+  .funnel-bar { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 14px; transition: width .8s ease; }
+  .funnel-bar span { font-family: var(--mono); font-size: 12px; color: #fff; font-weight: 500; }
+  .funnel-label { width: 60px; font-size: 12px; color: var(--text2); text-align: right; flex-shrink: 0; }
+  .funnel-pct { width: 52px; font-family: var(--mono); font-size: 13px; color: var(--text); flex-shrink: 0; }
+  .funnel-arrow { text-align: center; font-size: 11px; color: var(--text3); padding-left: 76px; font-family: var(--mono); }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 11px; color: var(--text2); font-weight: 400; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 12px; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--surface2); }
+  .rank { color: var(--accent); font-weight: 500; }
+
+  /* INSIGHT BOX */
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 32px; }
+  .insight-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; border-left: 3px solid var(--accent-color, var(--accent));
+  }
+  .insight-icon { font-size: 20px; margin-bottom: 10px; }
+  .insight-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .insight-body { font-size: 12px; color: var(--text2); line-height: 1.7; }
+
+  /* SQL BLOCK */
+  .sql-block {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; font-family: var(--mono); font-size: 12px; line-height: 1.8;
+    color: var(--text2); overflow-x: auto; margin: 16px 0;
+  }
+  .sql-kw { color: #7eb3ff; font-weight: 500; }
+  .sql-fn { color: var(--green); }
+  .sql-str { color: var(--amber); }
+  .sql-cm { color: var(--text3); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px;
+    max-width: 900px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-name { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { font-size: 12px; color: var(--text2); text-decoration: none; }
+
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); margin-right: 6px; }
+  .tag.green { background: rgba(52,211,153,.1); color: var(--green); border-color: rgba(52,211,153,.3); }
+  .tag.blue { background: rgba(79,142,247,.1); color: var(--accent2); border-color: rgba(79,142,247,.3); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">QIAN JINGQI · DATA REPORT</div>
+  <div class="nav-links">
+    <a href="#funnel">转化漏斗</a>
+    <a href="#repurchase">复购分析</a>
+    <a href="#time">时段分析</a>
+    <a href="#insights">分析结论</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">SQL Data Analysis Project</div>
+  <h1 class="hero-title">电商用户<em>行为分析</em><br>报告</h1>
+  <p class="hero-sub">基于淘宝用户行为数据集（13万条脱敏真实数据），使用MySQL独立完成数据建模与分析，探索用户从浏览到购买的完整行为链路。</p>
+  <div class="hero-meta">
+    <div class="meta-item"><div class="meta-label">数据量</div><div class="meta-val">137,733 条</div></div>
+    <div class="meta-item"><div class="meta-label">分析工具</div><div class="meta-val">MySQL · Excel</div></div>
+    <div class="meta-item"><div class="meta-label">数据来源</div><div class="meta-val">阿里云天池公开数据集</div></div>
+    <div class="meta-item"><div class="meta-label">分析时间</div><div class="meta-val">2026.06</div></div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<section>
+  <div class="section-label">Overview</div>
+  <div class="section-title">数据概览</div>
+  <div class="section-sub">数据集包含用户浏览、收藏、加购、购买四类行为，覆盖完整的电商消费决策链路。</div>
+  <div class="stat-row">
+    <div class="stat-card" style="--accent-color: var(--accent)">
+      <div class="stat-num">123,873</div>
+      <div class="stat-desc">浏览行为（PV）<br>占总行为 89.94%</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--amber)">
+      <div class="stat-num">7,398</div>
+      <div class="stat-desc">加购行为（Cart）<br>占总行为 5.37%</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--green)">
+      <div class="stat-num">2,902</div>
+      <div class="stat-desc">购买行为（Buy）<br>占总行为 2.11%</div>
+    </div>
+    <div class="stat-card" style="--accent-color: #a78bfa">
+      <div class="stat-num">3,560</div>
+      <div class="stat-desc">收藏行为（Fav）<br>占总行为 2.58%</div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNNEL -->
+<section id="funnel">
+  <div class="section-label">Analysis 01 · Conversion</div>
+  <div class="section-title">用户转化漏斗</div>
+  <div class="section-sub">从浏览到购买，用户在哪个环节流失最多？</div>
+
+  <div class="chart-card">
+    <div class="chart-title">浏览 → 加购 → 购买 转化漏斗</div>
+    <div class="chart-sub">以浏览量为基准，各行为占比可视化</div>
+    <div class="funnel">
+      <div class="funnel-row">
+        <div class="funnel-label">浏览 PV</div>
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="width:100%;background:linear-gradient(90deg,#4f8ef7,#7eb3ff)">
+            <span>123,873 次</span>
+          </div>
+        </div>
+        <div class="funnel-pct">100%</div>
+      </div>
+      <div class="funnel-arrow">↓ 流失 94.03%</div>
+      <div class="funnel-row">
+        <div class="funnel-label">加购 Cart</div>
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="width:5.97%;background:linear-gradient(90deg,#fbbf24,#fde68a)">
+            <span>7,398</span>
+          </div>
+        </div>
+        <div class="funnel-pct">5.97%</div>
+      </div>
+      <div class="funnel-arrow">↓ 流失 60.78%（加购未购买）</div>
+      <div class="funnel-row">
+        <div class="funnel-label">购买 Buy</div>
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="width:2.34%;background:linear-gradient(90deg,#34d399,#6ee7b7)">
+            <span>2,902</span>
+          </div>
+        </div>
+        <div class="funnel-pct">2.34%</div>
+      </div>
+    </div>
+
+    <div class="sql-block">
+      <span class="sql-cm">-- 转化漏斗分析</span><br>
+      <span class="sql-kw">SELECT</span> behavior,<br>
+      &nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> 次数,<br>
+      &nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">COUNT</span>(*) * 100.0 / <span class="sql-fn">SUM</span>(<span class="sql-fn">COUNT</span>(*)) <span class="sql-kw">OVER</span>(), 2) <span class="sql-kw">AS</span> 占比<br>
+      <span class="sql-kw">FROM</span> user_behavior<br>
+      <span class="sql-kw">GROUP BY</span> behavior<br>
+      <span class="sql-kw">ORDER BY</span> 次数 <span class="sql-kw">DESC</span>;
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card" style="--accent-color: var(--red)">
+      <div class="insight-icon">🎯</div>
+      <div class="insight-title">核心发现：加购→购买是最大流失节点</div>
+      <div class="insight-body">7,398条加购行为中仅2,902条转化为购买，流失率高达60.78%。用户加购后大量放弃，说明价格敏感度高或存在比价行为。</div>
+    </div>
+    <div class="insight-card" style="--accent-color: var(--amber)">
+      <div class="insight-icon">💡</div>
+      <div class="insight-title">运营建议：加购用户定向促销</div>
+      <div class="insight-body">对加购未购买用户推送限时优惠或补贴，预计可将加购→购买转化率从39%提升至55%+，对应GMV增量可观。</div>
+    </div>
+  </div>
+</section>
+
+<!-- REPURCHASE -->
+<section id="repurchase">
+  <div class="section-label">Analysis 02 · Repurchase</div>
+  <div class="section-title">高复购品类分析</div>
+  <div class="section-sub">哪些品类拥有最强的用户粘性？30天内同品类购买2次以上的用户数。</div>
+
+  <div class="chart-card">
+    <div class="chart-title">Top 10 高复购品类（复购用户数）</div>
+    <div class="chart-sub">同一用户对同一品类产生2次以上购买行为</div>
+    <div class="chart-wrap"><canvas id="repurchaseChart"></canvas></div>
+
+    <div class="sql-block" style="margin-top:24px;">
+      <span class="sql-cm">-- 复购品类分析</span><br>
+      <span class="sql-kw">SELECT</span> category_id, <span class="sql-fn">COUNT</span>(<span class="sql-kw">DISTINCT</span> user_id) <span class="sql-kw">AS</span> 复购用户数<br>
+      <span class="sql-kw">FROM</span> user_behavior<br>
+      <span class="sql-kw">WHERE</span> behavior = <span class="sql-str">'buy'</span><br>
+      <span class="sql-kw">GROUP BY</span> category_id<br>
+      <span class="sql-kw">HAVING</span> <span class="sql-fn">COUNT</span>(*) >= 2<br>
+      <span class="sql-kw">ORDER BY</span> 复购用户数 <span class="sql-kw">DESC</span><br>
+      <span class="sql-kw">LIMIT</span> 10;
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Top 10 复购品类明细</div>
+    <table class="data-table">
+      <thead><tr><th>排名</th><th>品类ID</th><th>复购用户数</th><th>标注</th></tr></thead>
+      <tbody>
+        <tr><td class="rank">#1</td><td>1464116</td><td>74</td><td><span class="tag green">最高粘性</span></td></tr>
+        <tr><td class="rank">#2</td><td>2735466</td><td>70</td><td><span class="tag green">高粘性</span></td></tr>
+        <tr><td class="rank">#3</td><td>4145813</td><td>67</td><td><span class="tag green">高粘性</span></td></tr>
+        <tr><td class="rank">#4</td><td>2885642</td><td>63</td><td><span class="tag blue">重点运营</span></td></tr>
+        <tr><td class="rank">#5</td><td>4801426</td><td>54</td><td><span class="tag blue">重点运营</span></td></tr>
+        <tr><td class="rank">#6</td><td>4756105</td><td>45</td><td></td></tr>
+        <tr><td class="rank">#7</td><td>982926</td><td>43</td><td></td></tr>
+        <tr><td class="rank">#8</td><td>4357323</td><td>40</td><td></td></tr>
+        <tr><td class="rank">#9</td><td>3002561</td><td>38</td><td></td></tr>
+        <tr><td class="rank">#10</td><td>4159072</td><td>37</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- TIME -->
+<section id="time">
+  <div class="section-label">Analysis 03 · Timing</div>
+  <div class="section-title">下单时段分布</div>
+  <div class="section-sub">用户在一天中的哪些时段最活跃？对运营排期有何指导意义？</div>
+
+  <div class="chart-card">
+    <div class="chart-title">24小时下单量分布</div>
+    <div class="chart-sub">以小时为单位统计购买行为次数，识别高峰与低谷</div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="timeChart"></canvas></div>
+
+    <div class="sql-block" style="margin-top:24px;">
+      <span class="sql-cm">-- 时段分析（需先添加时间字段）</span><br>
+      <span class="sql-kw">ALTER TABLE</span> user_behavior <span class="sql-kw">ADD COLUMN</span> behavior_time <span class="sql-kw">DATETIME</span>;<br>
+      <span class="sql-kw">UPDATE</span> user_behavior <span class="sql-kw">SET</span> behavior_time = <span class="sql-fn">FROM_UNIXTIME</span>(ts);<br><br>
+      <span class="sql-kw">SELECT</span> <span class="sql-fn">HOUR</span>(behavior_time) <span class="sql-kw">AS</span> 小时, <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> 下单量<br>
+      <span class="sql-kw">FROM</span> user_behavior <span class="sql-kw">WHERE</span> behavior = <span class="sql-str">'buy'</span><br>
+      <span class="sql-kw">GROUP BY</span> <span class="sql-fn">HOUR</span>(behavior_time) <span class="sql-kw">ORDER BY</span> 小时;
+    </div>
+  </div>
+</section>
+
+<!-- INSIGHTS -->
+<section id="insights">
+  <div class="section-label">Summary · Insights</div>
+  <div class="section-title">核心结论与建议</div>
+  <div class="section-sub">三个分析问题对应三个可落地的运营策略。</div>
+
+  <div class="insight-grid">
+    <div class="insight-card" style="--accent-color:#4f8ef7">
+      <div class="insight-icon">📉</div>
+      <div class="insight-title">加购流失率61%，定向促销优先级最高</div>
+      <div class="insight-body">加购→购买是整个链路最大漏斗。对加购未购买用户发送限时优惠推送，是ROI最高的干预点。</div>
+    </div>
+    <div class="insight-card" style="--accent-color:var(--green)">
+      <div class="insight-icon">🔁</div>
+      <div class="insight-title">Top3品类复购用户超60人，适合会员激励</div>
+      <div class="insight-body">品类1464116/2735466/4145813复购用户数居前，建议对这些品类的高频买家推出会员订阅或积分体系。</div>
+    </div>
+    <div class="insight-card" style="--accent-color:var(--amber)">
+      <div class="insight-icon">🕙</div>
+      <div class="insight-title">22点为单日最高峰，运营活动应前置</div>
+      <div class="insight-body">22时下单量433单为全天最高，建议促销活动在21点启动预热，在14点和22点各设一次推送触达。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-name">钱婧琦 · QIAN JINGQI</div>
+  <div style="font-size:12px;color:var(--text3);">早稻田大学社会科学学部 · 求职中</div>
+  <div class="footer-links">
+    <a href="mailto:jingqi809@gmail.com">jingqi809@gmail.com</a>
+  </div>
+</footer>
+
+<script>
+// Repurchase chart
+new Chart(document.getElementById('repurchaseChart'), {
+  type: 'bar',
+  data: {
+    labels: ['1464116','2735466','4145813','2885642','4801426','4756105','982926','4357323','3002561','4159072'],
+    datasets: [{
+      data: [74,70,67,63,54,45,43,40,38,37],
+      backgroundColor: ['rgba(79,142,247,0.8)','rgba(79,142,247,0.7)','rgba(79,142,247,0.6)',
+        'rgba(79,142,247,0.5)','rgba(79,142,247,0.45)','rgba(79,142,247,0.4)',
+        'rgba(79,142,247,0.35)','rgba(79,142,247,0.3)','rgba(79,142,247,0.25)','rgba(79,142,247,0.2)'],
+      borderColor: 'rgba(79,142,247,1)',
+      borderWidth: 1, borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8a9bb8', font: { family: 'IBM Plex Mono', size: 11 } }, grid: { color: '#252d3d' } },
+      y: { ticks: { color: '#8a9bb8', font: { family: 'IBM Plex Mono', size: 11 } }, grid: { color: '#252d3d' } }
+    }
+  }
+});
+
+// Time chart
+const hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+const orders = [294,192,77,36,20,34,18,36,124,179,256,364,317,312,372,324,286,348,288,261,339,360,433,370];
+const colors = orders.map(v => v >= 400 ? 'rgba(248,113,113,0.85)' : v >= 350 ? 'rgba(251,191,36,0.8)' : 'rgba(79,142,247,0.6)');
+
+new Chart(document.getElementById('timeChart'), {
+  type: 'bar',
+  data: {
+    labels: hours.map(h => h + '时'),
+    datasets: [{
+      data: orders, backgroundColor: colors,
+      borderRadius: 4, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: ctx => `下单量: ${ctx.raw}` }
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#8a9bb8', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#252d3d' } },
+      y: { ticks: { color: '#8a9bb8', font: { family: 'IBM Plex Mono', size: 11 } }, grid: { color: '#252d3d' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
